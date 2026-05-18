@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizBot AI — Smart Sales Assistant</title>
+<style>
+  :root {
+    --bg-primary: #0e1621;
+    --bg-secondary: #17212b;
+    --bg-tertiary: #242f3d;
+    --bg-hover: #2b3a4d;
+    --accent: #2b82d9;
+    --accent-hover: #3a9ae8;
+    --accent-gradient: linear-gradient(135deg, #2b82d9, #1a6bc7);
+    --text-primary: #ffffff;
+    --text-secondary: #8ba3bd;
+    --text-muted: #546a80;
+    --border: #2c3e50;
+    --online: #4caf50;
+    --msg-out: #2b5278;
+    --msg-in: #182533;
+    --bubble-out: #2b5278;
+    --bubble-in: #182533;
+    --danger: #e74c3c;
+    --success: #2ecc71;
+    --warning: #f39c12;
+    --purple: #9b59b6;
+    --teal: #1abc9c;
+  }
+  .light-theme {
+    --bg-primary: #f0f2f5;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f5f7fa;
+    --bg-hover: #e8ecf0;
+    --accent: #2b82d9;
+    --text-primary: #1a1a2e;
+    --text-secondary: #5a6a7a;
+    --text-muted: #8a9aaa;
+    --border: #dde3ea;
+    --msg-out: #dcf8c6;
+    --msg-in: #ffffff;
+    --bubble-out: #dcf8c6;
+    --bubble-in: #ffffff;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ===== LEFT SIDEBAR ===== */
+  .sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: background 0.3s;
+  }
+  .sidebar-header {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+  }
+  .brand-logo {
+    width: 42px; height: 42px;
+    background: var(--accent-gradient);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(43,130,217,0.4);
+    flex-shrink: 0;
+  }
+  .brand-info h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .brand-info span { font-size: 12px; color: var(--accent); font-weight: 500; }
+  .sidebar-header-actions { margin-left: auto; display: flex; gap: 8px; }
+  .icon-btn {
+    width: 36px; height: 36px;
+    border: none; background: none; cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    transition: all 0.2s;
+  }
+  .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+  .search-bar {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-input-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    padding: 8px 14px;
+  }
+  .search-input-wrap span { color: var(--text-muted); font-size: 16px; }
+  .search-input-wrap input {
+    border: none; background: none; outline: none;
+    color: var(--text-primary); font-size: 14px; flex: 1;
+  }
+  .search-input-wrap input::placeholder { color: var(--text-muted); }
+
+  .chats-list { flex: 1; overflow-y: auto; }
+  .chat-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .chat-item:hover { background: var(--bg-hover); }
+  .chat-item.active { background: var(--bg-tertiary); }
+  .chat-avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 600;
+    flex-shrink: 0; position: relative;
+    color: #fff;
+  }
+  .avatar-online::after {
+    content: '';
+    width: 12px; height: 12px;
+    background: var(--online);
+    border: 2px solid var(--bg-secondary);
+    border-radius: 50%;
+    position: absolute; bottom: 1px; right: 1px;
+  }
+  .chat-info { flex: 1; min-width: 0; }
+  .chat-name { font-size: 15px; font-weight: 600; }
+  .chat-preview {
+    font-size: 13px; color: var(--text-secondary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .chat-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .chat-time { font-size: 12px; color: var(--text-muted); }
+  .chat-badge {
+    background: var(--accent);
+    color: #fff; font-size: 11px; font-weight: 700;
+    border-radius: 10px; padding: 2px 7px;
+    min-width: 20px; text-align: center;
+  }
+  .chat-badge.muted { background: var(--text-muted); }
+
+  .sidebar-nav {
+    border-top: 1px solid var(--border);
+    padding: 8px;
+    display: flex; justify-content: space-around;
+  }
+  .nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 8px 16px;
+    border: none; background: none; cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 10px;
+    transition: all 0.2s;
+    font-size: 11px;
+  }
+  .nav-btn span:first-child { font-size: 20px; }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+
+  /* ===== CHAT AREA ===== */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    position: relative;
+    overflow: hidden;
+  }
+  .chat-bg {
+    position: absolute; inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .chat-header {
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .chat-header-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 600;
+    color: #fff;
+    position: relative;
+  }
+  .chat-header-info h3 { font-size: 15px; font-weight: 600; }
+  .chat-header-info p { font-size: 12px; color: var(--online); }
+  .chat-header-actions { margin-left: auto; display: flex; gap: 4px; }
+
+  .messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+  }
+  .date-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 12px 0;
+  }
+  .date-divider span {
+    background: rgba(43,130,217,0.15);
+    color: var(--text-secondary);
+    font-size: 12px; font-weight: 500;
+    padding: 4px 12px; border-radius: 12px;
+    margin: 0 auto;
+  }
+  .message-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 72%;
+    animation: msgIn 0.2s ease;
+  }
+  @keyframes msgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .message-wrap.out { align-self: flex-end; align-items: flex-end; }
+  .message-wrap.in { align-self: flex-start; align-items: flex-start; }
+  .msg-sender { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 2px; padding-left: 12px; }
+  .message-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px; line-height: 1.5;
+    position: relative;
+    max-width: 100%;
+    word-break: break-word;
+  }
+  .message-wrap.out .message-bubble {
+    background: var(--bubble-out);
+    border-bottom-right-radius: 4px;
+    color: #e8f4fd;
+  }
+  .message-wrap.in .message-bubble {
+    background: var(--bubble-in);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .msg-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; padding: 0 4px; display: flex; align-items: center; gap: 4px; }
+  .msg-check { color: var(--accent); font-size: 13px; }
+  .bot-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(43,130,217,0.2);
+    color: var(--accent);
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 8px;
+    margin-bottom: 4px;
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: none;
+    align-self: flex-start;
+    background: var(--bubble-in);
+    padding: 12px 16px;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    margin-bottom: 4px;
+  }
+  .typing-indicator.show { display: flex; align-items: center; gap: 4px; }
+  .typing-dot {
+    width: 7px; height: 7px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* Quick replies */
+  .quick-replies {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 12px 20px 8px;
+  }
+  .quick-reply-chip {
+    background: rgba(43,130,217,0.15);
+    border: 1px solid rgba(43,130,217,0.3);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .quick-reply-chip:hover { background: var(--accent); color: #fff; }
+
+  .chat-input-area {
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: flex-end; gap: 10px;
+  }
+  .input-actions { display: flex; gap: 4px; }
+  .input-wrap {
+    flex: 1;
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .message-input {
+    flex: 1;
+    border: none; background: none; outline: none;
+    color: var(--text-primary);
+    font-size: 15px;
+    resize: none; max-height: 100px;
+    line-height: 1.4;
+    font-family: inherit;
+  }
+  .message-input::placeholder { color: var(--text-muted); }
+  .send-btn {
+    width: 42px; height: 42px;
+    background: var(--accent-gradient);
+    border: none; border-radius: 50%;
+    cursor: pointer; color: #fff;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 12px rgba(43,130,217,0.4);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { transform: scale(1.08); box-shadow: 0 5px 18px rgba(43,130,217,0.6); }
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel {
+    width: 360px;
+    min-width: 360px;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: background 0.3s;
+  }
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .panel-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: none; background: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 18px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    min-width: 60px;
+  }
+  .tab-btn .tab-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .tab-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .panel-content { flex: 1; overflow-y: auto; }
+  .tab-pane { display: none; padding: 16px; }
+  .tab-pane.active { display: block; }
+
+  /* Section header */
+  .section-title {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 12px; margin-top: 4px;
+  }
+
+  /* ===== ANALYTICS TAB ===== */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-value { font-size: 26px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .stat-change { font-size: 11px; margin-top: 6px; font-weight: 600; }
+  .stat-change.up { color: var(--success); }
+  .stat-change.down { color: var(--danger); }
+
+  .chart-card {
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .chart-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: var(--accent-gradient);
+    transition: height 0.5s cubic-bezier(0.4,0,0.2,1);
+    min-height: 4px;
+    position: relative;
+  }
+  .bar:hover { filter: brightness(1.2); }
+  .bar-label { font-size: 10px; color: var(--text-muted); }
+  .donut-container { display: flex; align-items: center; gap: 16px; }
+  .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-val { margin-left: auto; font-weight: 600; }
+
+  /* Donut SVG */
+  .donut-svg { width: 90px; height: 90px; }
+
+  /* Satisfaction */
+  .satisfaction-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+  .sat-label { width: 70px; color: var(--text-secondary); }
+  .sat-bar-wrap { flex: 1; background: var(--bg-primary); border-radius: 4px; height: 8px; }
+  .sat-bar { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .sat-val { width: 30px; text-align: right; font-weight: 600; }
+
+  /* ===== KNOWLEDGE BASE TAB ===== */
+  .kb-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+  }
+  .kb-search input { border: none; background: none; outline: none; color: var(--text-primary); font-size: 13px; flex: 1; }
+  .kb-categories { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .kb-cat {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    transition: all 0.2s;
+  }
+  .kb-cat.active, .kb-cat:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .kb-entry {
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .kb-entry:hover { border-color: var(--accent); transform: translateX(2px); }
+  .kb-entry-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .kb-entry-icon { font-size: 16px; }
+  .kb-entry-title { font-size: 13px; font-weight: 600; }
+  .kb-entry-body { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .kb-entry-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+  .kb-tag {
+    background: rgba(43,130,217,0.15);
+    color: var(--accent);
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 6px;
+  }
+  .add-btn {
+    width: 100%; padding: 10px;
+    border: 2px dashed var(--border);
+    background: none; border-radius: 10px;
+    color: var(--text-muted); font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(43,130,217,0.05); }
+
+  /* ===== QUICK REPLIES TAB ===== */
+  .template-item {
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .template-item:hover { border-color: var(--accent); }
+  .template-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .template-key { font-size: 12px; font-weight: 700; color: var(--accent); }
+  .template-actions { display: flex; gap: 4px; }
+  .template-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .template-category { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+
+  /* ===== CUSTOMER PROFILE TAB ===== */
+  .customer-header {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 0; gap: 8px;
+  }
+  .customer-big-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700; color: #fff;
+    margin-bottom: 4px;
+    box-shadow: 0 4px 20px rgba(43,130,217,0.3);
+  }
+  .customer-name { font-size: 18px; font-weight: 700; }
+  .customer-handle { font-size: 13px; color: var(--text-muted); }
+  .customer-tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+  .c-tag { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .tag-hot { background: rgba(231,76,60,0.2); color: var(--danger); }
+  .tag-new { background: rgba(46,204,113,0.2); color: var(--success); }
+  .tag-vip { background: rgba(155,89,182,0.2); color: var(--purple); }
+  .tag-followup { background: rgba(243,156,18,0.2); color: var(--warning); }
+  .info-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .info-row .info-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .info-row .info-label { color: var(--text-muted); font-size: 11px; }
+  .info-row .info-val { font-weight: 500; font-size: 13px; }
+  .conv-history-item {
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .conv-history-item .ch-date { color: var(--text-muted); font-size: 11px; margin-bottom: 3px; }
+  .conv-history-item .ch-summary { color: var(--text-secondary); }
+  .score-bar {
+    height: 6px; border-radius: 3px;
+    background: var(--bg-primary);
+    margin-top: 4px;
+  }
+  .score-fill {
+    height: 100%; border-radius: 3px;
+    background: var(--accent-gradient);
+    transition: width 0.8s ease;
+  }
+
+  /* ===== SETTINGS TAB ===== */
+  .settings-section {
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 4px 0;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .settings-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row:hover { background: var(--bg-hover); }
+  .settings-row .s-icon { font-size: 18px; width: 28px; text-align: center; }
+  .settings-row .s-label { flex: 1; font-weight: 500; }
+  .settings-row .s-value { font-size: 12px; color: var(--text-muted); }
+  .settings-row .s-arrow { color: var(--text-muted); }
+  /* Toggle */
+  .toggle-wrap { display: flex; align-items: center; }
+  .toggle {
+    width: 42px; height: 24px;
+    background: var(--border);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .toggle.on::after { transform: translateX(18px); }
+  /* Select */
+  .s-select {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+  /* Bot name input */
+  .s-input {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 13px;
+    outline: none;
+    width: 130px;
+  }
+  .s-input:focus { border-color: var(--accent); }
+
+  /* Integration badges */
+  .integrations-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .integration-card {
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer; transition: all 0.2s;
+    text-align: center;
+  }
+  .integration-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .integration-card .int-icon { font-size: 24px; }
+  .integration-card .int-name { font-size: 12px; font-weight: 600; }
+  .integration-card .int-status { font-size: 10px; }
+  .int-connected { color: var(--success); }
+  .int-available { color: var(--text-muted); }
+
+  /* ===== MODALS ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 24px;
+    width: 460px;
+    max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    animation: modalIn 0.25s ease;
+    border: 1px solid var(--border);
+  }
+  @keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-header h2 { font-size: 18px; font-weight: 700; }
+  .modal-form { display: flex; flex-direction: column; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-input, .form-textarea, .form-select {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-select option { background: var(--bg-secondary); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-primary {
+    flex: 1; padding: 12px;
+    background: var(--accent-gradient);
+    border: none; border-radius: 10px;
+    color: #fff; font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(43,130,217,0.4);
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(43,130,217,0.5); }
+  .btn-secondary {
+    padding: 12px 20px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary); font-size: 14px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: var(--bg-hover); }
+
+  /* ===== NOTIFICATION TOAST ===== */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    min-width: 280px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    animation: toastIn 0.3s ease;
+    border-left: 4px solid var(--accent);
+  }
+  @keyframes toastIn { from { opacity:0; transform:translateX(100%); } to { opacity:1; transform:translateX(0); } }
+  .toast-icon { font-size: 18px; }
+  .toast-text { flex: 1; font-size: 13px; font-weight: 500; }
+
+  /* ===== DEMO MODE BADGE ===== */
+  .demo-badge {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(43,130,217,0.9);
+    color: #fff;
+    padding: 8px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(43,130,217,0.4);
+  }
+  .demo-pulse {
+    width: 8px; height: 8px;
+    background: #fff; border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.5); } }
+
+  /* ===== SCENARIO BUTTONS ===== */
+  .scenario-bar {
+    padding: 10px 16px;
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border);
+    display: flex; gap: 8px; align-items: center; overflow-x: auto;
+  }
+  .scenario-bar label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
+  .scenario-btn {
+    padding: 5px 12px;
+    border-radius: 12px; font-size: 12px; font-weight: 600;
+    border: 1px solid; cursor: pointer;
+    white-space: nowrap; transition: all 0.2s;
+    background: none;
+  }
+  .s-btn-blue { border-color: var(--accent); color: var(--accent); }
+  .s-btn-blue:hover { background: var(--accent); color: #fff; }
+  .s-btn-green { border-color: var(--success); color: var(--success); }
+  .s-btn-green:hover { background: var(--success); color: #fff; }
+  .s-btn-orange { border-color: var(--warning); color: var(--warning); }
+  .s-btn-orange:hover { background: var(--warning); color: #fff; }
+  .s-btn-purple { border-color: var(--purple); color: var(--purple); }
+  .s-btn-purple:hover { background: var(--purple); color: #fff; }
+
+  /* Colors for avatars */
+  .av-blue { background: linear-gradient(135deg, #2b82d9, #1a6bc7); }
+  .av-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+  .av-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+  .av-orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+  .av-teal { background: linear-gradient(135deg, #1abc9c, #16a085); }
+  .av-red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+
+  /* Notification dot on nav */
+  .nav-notif { position: relative; }
+  .nav-notif::after {
+    content: '3'; position: absolute; top: 4px; right: 10px;
+    background: var(--danger); color: #fff;
+    font-size: 9px; font-weight: 700;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--bg-secondary);
+  }
+
+  /* Progress bar */
+  .progress-wrap { background: var(--bg-primary); border-radius: 8px; height: 10px; overflow: hidden; }
+  .progress-fill {
+    height: 100%; border-radius: 8px;
+    background: var(--accent-gradient);
+    transition: width 1s ease;
+  }
+
+  /* Status indicator */
+  .bot-status-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: rgba(46,204,113,0.1);
+    border-radius: 8px;
+    font-size: 12px; font-weight: 600; color: var(--success);
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- LEFT SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="brand-logo">🤖</div>
+    <div class="brand-info">
+      <h1>BizBot AI</h1>
+      <span>▶ Sales Assistant Platform</span>
+    </div>
+    <div class="sidebar-header-actions">
+      <button class="icon-btn" onclick="openNewChatModal()" title="New Conversation">✏️</button>
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" id="themeBtn">🌙</button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <span>🔍</span>
+      <input type="text" placeholder="Search conversations..." id="chatSearch" oninput="filterChats(this.value)">
+    </div>
+  </div>
+
+  <div class="chats-list" id="chatsList">
+    <!-- Chats injected by JS -->
+  </div>
+
+  <div class="sidebar-nav">
+    <button class="nav-btn active" onclick="setNavActive(this, 'chats')" id="navChats">
+      <span>💬</span><span>Chats</span>
+    </button>
+    <button class="nav-btn nav-notif" onclick="setNavActive(this, 'alerts')" id="navAlerts">
+      <span>🔔</span><span>Alerts</span>
+    </button>
+    <button class="nav-btn" onclick="setNavActive(this, 'analytics')" id="navAnalytics">
+      <span>📊</span><span>Stats</span>
+    </button>
+    <button class="nav-btn" onclick="setNavActive(this, 'settings')" id="navSettings">
+      <span>⚙️</span><span>Setup</span>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN CHAT AREA -->
+<div class="chat-area">
+  <div class="chat-bg"></div>
+
+  <div class="chat-header" id="chatHeader">
+    <div class="chat-header-avatar av-blue" id="headerAvatar">S</div>
+    <div class="chat-header-info">
+      <h3 id="headerName">Sarah Johnson</h3>
+      <p id="headerStatus">🟢 Active now · responded 3s ago</p>
+    </div>
+    <div class="chat-header-actions">
+      <button class="icon-btn" title="Voice Call">📞</button>
+      <button class="icon-btn" title="Video Call">📹</button>
+      <button class="icon-btn" title="Search in Chat">🔍</button>
+      <button class="icon-btn" onclick="showTab('profile')" title="Customer Profile">👤</button>
+    </div>
+  </div>
+
+  <div class="messages-area" id="messagesArea">
+    <!-- Messages injected by JS -->
+  </div>
+
+  <div class="typing-indicator" id="typingIndicator">
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+  </div>
+
+  <div class="quick-replies" id="quickReplies">
+    <span class="quick-reply-chip" onclick="sendQuickReply('💰 Pricing & Plans')">💰 Pricing & Plans</span>
+    <span class="quick-reply-chip" onclick="sendQuickReply('📅 Book a Demo')">📅 Book a Demo</span>
+    <span class="quick-reply-chip" onclick="sendQuickReply('🛍️ Show Products')">🛍️ Show Products</span>
+    <span class="quick-reply-chip" onclick="sendQuickReply('📞 Talk to a Human')">📞 Talk to a Human</span>
+    <span class="quick-reply-chip" onclick="sendQuickReply('❓ FAQs')">❓ FAQs</span>
+  </div>
+
+  <div class="scenario-bar">
+    <label>▶ DEMO:</label>
+    <button class="scenario-btn s-btn-blue" onclick="runScenario('lead')">🎯 Lead Capture</button>
+    <button class="scenario-btn s-btn-green" onclick="runScenario('pricing')">💰 Pricing Flow</button>
+    <button class="scenario-btn s-btn-orange" onclick="runScenario('booking')">📅 Book Appointment</button>
+    <button class="scenario-btn s-btn-purple" onclick="runScenario('support')">🛠️ Support Flow</button>
+    <button class="scenario-btn s-btn-blue" onclick="runScenario('upsell')">🚀 Upsell Flow</button>
+  </div>
+
+  <div class="chat-input-area">
+    <div class="input-actions">
+      <button class="icon-btn" title="Attach File">📎</button>
+      <button class="icon-btn" title="Emoji">😊</button>
+    </div>
+    <div class="input-wrap">
+      <textarea class="message-input" id="messageInput" placeholder="Type a message..." rows="1"
+        onkeydown="handleInputKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="icon-btn" title="Voice Message">🎤</button>
+    </div>
+    <button class="send-btn" onclick="sendUserMessage()" title="Send">➤</button>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <div class="panel-tabs">
+    <button class="tab-btn active" onclick="showTab('analytics')" id="tab-analytics">
+      <span>📊</span><span class="tab-label">Stats</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('knowledge')" id="tab-knowledge">
+      <span>🧠</span><span class="tab-label">KB</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('templates')" id="tab-templates">
+      <span>⚡</span><span class="tab-label">Replies</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('profile')" id="tab-profile">
+      <span>👤</span><span class="tab-label">Customer</span>
+    </button>
+    <button class="tab-btn" onclick="showTab('settings')" id="tab-settings">
+      <span>⚙️</span><span class="tab-label">Settings</span>
+    </button>
+  </div>
+
+  <div class="panel-content">
+    <!-- ANALYTICS -->
+    <div class="tab-pane active" id="pane-analytics">
+      <div class="bot-status-row">
+        <span>●</span> Bot is LIVE & responding · 99.9% uptime
+      </div>
+      <div class="section-title">Today's Performance</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--accent)">247</div>
+          <div class="stat-label">Conversations</div>
+          <div class="stat-change up">↑ 23% vs yesterday</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--success)">68%</div>
+          <div class="stat-label">Lead Conversion</div>
+          <div class="stat-change up">↑ 11% this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--warning)">1.4s</div>
+          <div class="stat-label">Avg Response</div>
+          <div class="stat-change up">↓ 0.3s faster</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--purple)">4.8⭐</div>
+          <div class="stat-label">Satisfaction</div>
+          <div class="stat-change up">↑ 0.2 this month</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">📈 Conversations This Week</div>
+        <div class="bar-chart" id="weekChart"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">🎯 Intent Distribution</div>
+        <div class="donut-container">
+          <svg class="donut-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="35" fill="none" stroke="#2b82d9" stroke-width="20"
+              stroke-dasharray="88 132" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="35" fill="none" stroke="#2ecc71" stroke-width="20"
+              stroke-dasharray="50 170" stroke-dashoffset="-88" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="35" fill="none" stroke="#9b59b6" stroke-width="20"
+              stroke-dasharray="28 192" stroke-dashoffset="-138" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="35" fill="none" stroke="#f39c12" stroke-width="20"
+              stroke-dasharray="22 198" stroke-dashoffset="-166" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="35" fill="none" stroke="#e74c3c" stroke-width="20"
+              stroke-dasharray="12 208" stroke-dashoffset="-188" transform="rotate(-90 50 50)"/>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#2b82d9"></div> Pricing Inquiry <span class="legend-val" style="color:#2b82d9">40%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#2ecc71"></div> Product Info <span class="legend-val" style="color:#2ecc71">23%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#9b59b6"></div> Booking <span class="legend-val" style="color:#9b59b6">13%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div> Support <span class="legend-val" style="color:#f39c12">10%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div> Other <span class="legend-val" style="color:#e74c3c">14%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">😊 Customer Satisfaction Breakdown</div>
+        <div class="satisfaction-row"><span class="sat-label">Excellent</span><div class="sat-bar-wrap"><div class="sat-bar" style="width:72%;background:#2ecc71"></div></div><span class="sat-val" style="color:#2ecc71">72%</span></div>
+        <div class="satisfaction-row"><span class="sat-label">Good</span><div class="sat-bar-wrap"><div class="sat-bar" style="width:18%;background:#2b82d9"></div></div><span class="sat-val" style="color:#2b82d9">18%</span></div>
+        <div class="satisfaction-row"><span class="sat-label">Neutral</span><div class="sat-bar-wrap"><div class="sat-bar" style="width:7%;background:#f39c12"></div></div><span class="sat-val" style="color:#f39c12">7%</span></div>
+        <div class="satisfaction-row"><span class="sat-label">Poor</span><div class="sat-bar-wrap"><div class="sat-bar" style="width:3%;background:#e74c3c"></div></div><span class="sat-val" style="color:#e74c3c">3%</span></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">💰 Revenue Attributed to Bot</div>
+        <div style="font-size:28px;font-weight:700;color:var(--success);margin:4px 0">$18,420</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">This month · 34 closed deals</div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:74%"></div></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">74% of monthly goal ($24,800)</div>
+      </div>
+    </div>
+
+    <!-- KNOWLEDGE BASE -->
+    <div class="tab-pane" id="pane-knowledge">
+      <div class="kb-search">
+        <span>🔍</span>
+        <input type="text" placeholder="Search knowledge base..." oninput="filterKB(this.value)">
+      </div>
+      <div class="kb-categories">
+        <div class="kb-cat active" onclick="filterKBCat(this, 'all')">All</div>
+        <div class="kb-cat" onclick="filterKBCat(this, 'products')">Products</div>
+        <div class="kb-cat" onclick="filterKBCat(this, 'pricing')">Pricing</div>
+        <div class="kb-cat" onclick="filterKBCat(this, 'faq')">FAQ</div>
+        <div class="kb-cat" onclick="filterKBCat(this, 'contact')">Contact</div>
+      </div>
+
+      <div class="section-title">Knowledge Base Entries</div>
+      <div id="kbEntries"></div>
+      <button class="add-btn" onclick="openAddKBModal()">+ Add Knowledge Entry</button>
+    </div>
+
+    <!-- QUICK REPLY TEMPLATES -->
+    <div class="tab-pane" id="pane-templates">
+      <div class="section-title">Quick Reply Templates</div>
+      <div id="templatesList"></div>
+      <button class="add-btn" onclick="openAddTemplateModal()">+ Add Template</button>
+    </div>
+
+    <!-- CUSTOMER PROFILE -->
+    <div class="tab-pane" id="pane-profile">
+      <div class="customer-header" id="customerHeader">
+        <div class="customer-big-avatar av-blue" id="customerBigAvatar">S</div>
+        <div class="customer-name" id="customerFullName">Sarah Johnson</div>
+        <div class="customer-handle" id="customerHandle">@sarah.johnson · Chicago, IL</div>
+        <div class="customer-tags">
+          <span class="c-tag tag-hot">🔥 Hot Lead</span>
+          <span class="c-tag tag-vip">👑 VIP</span>
+          <span class="c-tag tag-followup">🔁 Follow-up</span>
+        </div>
+      </div>
+
+      <div class="section-title">Contact Information</div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(43,130,217,0.15)">📧</div>
+        <div><div class="info-label">Email</div><div class="info-val" id="cEmail">sarah.j@techcorp.com</div></div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(46,204,113,0.15)">📱</div>
+        <div><div class="info-label">Phone</div><div class="info-val" id="cPhone">+1 (312) 555-0142</div></div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(155,89,182,0.15)">🏢</div>
+        <div><div class="info-label">Company</div><div class="info-val" id="cCompany">TechCorp Solutions</div></div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(243,156,18,0.15)">💼</div>
+        <div><div class="info-label">Role</div><div class="info-val" id="cRole">Marketing Director</div></div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon" style="background:rgba(231,76,60,0.15)">💰</div>
+        <div><div class="info-label">Deal Size</div><div class="info-val" id="cDeal">$2,400 / yr</div></div>
+      </div>
+
+      <div class="section-title" style="margin-top:14px">Lead Score</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-size:32px;font-weight:700;color:var(--success)">87</div>
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">Highly likely to convert</div>
+          <div class="score-bar"><div class="score-fill" style="width:87%"></div></div>
+        </div>
+      </div>
+
+      <div class="section-title">Conversation History</div>
+      <div id="convHistory"></div>
+
+      <div class="section-title" style="margin-top:14px">AI Insights</div>
+      <div style="background:rgba(43,130,217,0.1);border:1px solid rgba(43,130,217,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.6;color:var(--text-secondary)">
+        🤖 <strong style="color:var(--text-primary)">AI Summary:</strong> Sarah has shown strong interest in the <strong>Professional Plan</strong>. She asked about team features 3 times and viewed pricing page. Recommended action: <strong style="color:var(--success)">Send personalized demo invite.</strong>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="tab-pane" id="pane-settings">
+      <div class="section-title">Bot Identity</div>
+      <div class="settings-section">
+        <div class="settings-row">
+          <span class="s-icon">🤖</span>
+          <span class="s-label">Bot Name</span>
+          <input class="s-input" value="Alex AI" id="botNameInput">
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🎭</span>
+          <span class="s-label">Personality Tone</span>
+          <select class="s-select" id="toneSelect">
+            <option>Friendly & Casual</option>
+            <option selected>Professional</option>
+            <option>Formal & Corporate</option>
+            <option>Playful</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🌐</span>
+          <span class="s-label">Language</span>
+          <select class="s-select">
+            <option selected>English</option>
+            <option>Spanish</option>
+            <option>French</option>
+            <option>German</option>
+            <option>Chinese</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">📝</span>
+          <span class="s-label">Industry Focus</span>
+          <select class="s-select">
+            <option>Retail</option>
+            <option selected>SaaS / Tech</option>
+            <option>Real Estate</option>
+            <option>Healthcare</option>
+            <option>Restaurant</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-title">Automation</div>
+      <div class="settings-section">
+        <div class="settings-row">
+          <span class="s-icon">⏰</span>
+          <span class="s-label">24/7 Auto-Response</span>
+          <div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🎯</span>
+          <span class="s-label">Auto Lead Qualification</span>
+          <div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">📧</span>
+          <span class="s-label">Email Capture</span>
+          <div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">📅</span>
+          <span class="s-label">Auto Booking</span>
+          <div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🔁</span>
+          <span class="s-label">Follow-up Reminders</span>
+          <div class="toggle-wrap"><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🚨</span>
+          <span class="s-label">Escalate to Human</span>
+          <div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+      </div>
+
+      <div class="section-title">Working Hours</div>
+      <div class="settings-section">
+        <div class="settings-row">
+          <span class="s-icon">🟢</span>
+          <span class="s-label">Business Hours</span>
+          <span class="s-value">9:00 AM – 6:00 PM</span>
+          <span class="s-arrow">›</span>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🌙</span>
+          <span class="s-label">After-Hours Mode</span>
+          <select class="s-select">
+            <option selected>AI handles all</option>
+            <option>Leave voicemail</option>
+            <option>Schedule callback</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🗺️</span>
+          <span class="s-label">Timezone</span>
+          <span class="s-value">America/Chicago</span>
+          <span class="s-arrow">›</span>
+        </div>
+      </div>
+
+      <div class="section-title">Integrations</div>
+      <div class="integrations-grid">
+        <div class="integration-card" onclick="showToast('✅', 'CRM sync active')">
+          <span class="int-icon">🔗</span>
+          <span class="int-name">Salesforce CRM</span>
+          <span class="int-status int-connected">● Connected</span>
+        </div>
+        <div class="integration-card" onclick="showToast('✅', 'Slack notifs active')">
+          <span class="int-icon">💬</span>
+          <span class="int-name">Slack</span>
+          <span class="int-status int-connected">● Connected</span>
+        </div>
+        <div class="integration-card" onclick="showToast('🔔', 'Calendly integration available')">
+          <span class="int-icon">📅</span>
+          <span class="int-name">Calendly</span>
+          <span class="int-status int-connected">● Connected</span>
+        </div>
+        <div class="integration-card" onclick="showToast('ℹ️', 'Click to connect Stripe')">
+          <span class="int-icon">💳</span>
+          <span class="int-name">Stripe Payments</span>
+          <span class="int-status int-connected">● Connected</span>
+        </div>
+        <div class="integration-card" onclick="showToast('ℹ️', 'HubSpot available')">
+          <span class="int-icon">📊</span>
+          <span class="int-name">HubSpot</span>
+          <span class="int-status int-available">○ Available</span>
+        </div>
+        <div class="integration-card" onclick="showToast('ℹ️', 'Zapier webhook ready')">
+          <span class="int-icon">⚡</span>
+          <span class="int-name">Zapier</span>
+          <span class="int-status int-available">○ Available</span>
+        </div>
+      </div>
+
+      <div class="section-title">Security & Data</div>
+      <div class="settings-section">
+        <div class="settings-row">
+          <span class="s-icon">🔒</span>
+          <span class="s-label">End-to-End Encryption</span>
+          <div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🛡️</span>
+          <span class="s-label">GDPR Compliance</span>
+          <span class="s-value" style="color:var(--success)">Active</span>
+        </div>
+        <div class="settings-row">
+          <span class="s-icon">🗄️</span>
+          <span class="s-label">Data Retention</span>
+          <select class="s-select">
+            <option>90 Days</option>
+            <option selected>1 Year</option>
+            <option>Forever</option>
+          </select>
+        </div>
+        <div class="settings-row" onclick="showToast('📤', 'Preparing data export...')">
+          <span class="s-icon">📤</span>
+          <span class="s-label">Export All Data</span>
+          <span class="s-arrow">›</span>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;padding:14px;background:var(--bg-tertiary);border-radius:12px;border:1px solid var(--border);text-align:center">
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">Current Plan</div>
+        <div style="font-size:22px;font-weight:700;color:var(--accent)">Professional</div>
+        <div style="font-size:12px;color:var(--text-muted);margin:4px 0 12px">$99/mo · Unlimited conversations</div>
+        <button class="btn-primary" onclick="showToast('🚀', 'Upgrading to Enterprise plan...')">Upgrade to Enterprise →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEMO BADGE -->
+<div class="demo-badge">
+  <div class="demo-pulse"></div>
+  🚀 LIVE DEMO — BizBot AI v2.4.1
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MODAL: New Chat -->
+<div class="modal-overlay" id="newChatModal" onclick="if(event.target===this)closeModal('newChatModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>➕ New Conversation</h2>
+      <button class="icon-btn" onclick="closeModal('newChatModal')">✕</button>
+    </div>
+    <div class="modal-form">
+      <div class="form-group">
+        <label class="form-label">Customer Name</label>
+        <input class="form-input" placeholder="John Smith" id="ncName">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" placeholder="john@company.com" id="ncEmail">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" placeholder="+1 (312) 555-0100" id="ncPhone">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Bot Persona</label>
+        <select class="form-select" id="ncPersona">
+          <option>Alex AI — General Sales</option>
+          <option>Sara AI — Real Estate</option>
+          <option>Mike AI — Tech Support</option>
+          <option>Emma AI — E-commerce</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('newChatModal')">Cancel</button>
+      <button class="btn-primary" onclick="createNewChat()">🚀 Start Conversation</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add KB Entry -->
+<div class="modal-overlay" id="addKBModal" onclick="if(event.target===this)closeModal('addKBModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🧠 Add Knowledge Entry</h2>
+      <button class="icon-btn" onclick="closeModal('addKBModal')">✕</button>
+    </div>
+    <div class="modal-form">
+      <div class="form-group">
+        <label class="form-label">Title / Question</label>
+        <input class="form-input" placeholder="What are your pricing plans?" id="kbTitle">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="kbCategory">
+          <option value="pricing">💰 Pricing</option>
+          <option value="products">📦 Products</option>
+          <option value="faq">❓ FAQ</option>
+          <option value="contact">📞 Contact</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Answer / Content</label>
+        <textarea class="form-textarea" placeholder="We offer three plans: Starter ($29/mo), Professional ($99/mo), Enterprise (custom)..." id="kbBody"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags (comma separated)</label>
+        <input class="form-input" placeholder="pricing, plans, cost" id="kbTags">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('addKBModal')">Cancel</button>
+      <button class="btn-primary" onclick="addKBEntry()">✅ Save to Knowledge Base</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Template -->
+<div class="modal-overlay" id="addTemplateModal" onclick="if(event.target===this)closeModal('addTemplateModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>⚡ Add Quick Reply Template</h2>
+      <button class="icon-btn" onclick="closeModal('addTemplateModal')">✕</button>
+    </div>
+    <div class="modal-form">
+      <div class="form-group">
+        <label class="form-label">Shortcut / Trigger</label>
+        <input class="form-input" placeholder="/greeting" id="tplKey">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="tplCat">
+          <option>Greeting</option>
+          <option>Pricing</option>
+          <option>Closing</option>
+          <option>Support</option>
+          <option>Follow-up</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message Text</label>
+        <textarea class="form-textarea" placeholder="Hi {{name}}! Welcome to..." id="tplText"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('addTemplateModal')">Cancel</button>
+      <button class="btn-primary" onclick="addTemplate()">✅ Save Template</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const customers = [
+  { id: 1, name: 'Sarah Johnson', handle: '@sarah.johnson · Chicago, IL', avatar: 'S', color: 'av-blue', online: true, unread: 3, time: '14:32', preview: 'Interested in Professional plan 🔥', email: 'sarah.j@techcorp.com', phone: '+1 (312) 555-0142', company: 'TechCorp Solutions', role: 'Marketing Director', deal: '$2,400 / yr' },
+  { id: 2, name: 'Marcus Williams', handle: '@marcus.w · Oak Park, IL', avatar: 'M', color: 'av-green', online: true, unread: 1, time: '13:55', preview: 'Do you integrate with Shopify?', email: 'marcus@shopify-store.com', phone: '+1 (312) 555-0198', company: 'Urban Kicks Store', role: 'Owner', deal: '$1,200 / yr' },
+  { id: 3, name: 'Jennifer Park', handle: '@jpark · Evanston, IL', avatar: 'J', color: 'av-purple', online: false, unread: 0, time: '11:20', preview: 'What\'s the difference between plans?', email: 'j.park@bloom.co', phone: '+1 (847) 555-0071', company: 'Bloom Boutique', role: 'CEO', deal: '$3,600 / yr' },
+  { id: 4, name: 'Daniel Cruz', handle: '@dcruz · Naperville, IL', avatar: 'D', color: 'av-orange', online: true, unread: 5, time: 'Tue', preview: 'Can I book a call with your team?', email: 'd.cruz@cruzauto.com', phone: '+1 (630) 555-0033', company: 'Cruz Auto Repair', role: 'Manager', deal: '$600 / yr' },
+  { id: 5, name: 'Aisha Thompson', handle: '@aisha.t · Chicago, IL', avatar: 'A', color: 'av-teal', online: false, unread: 0, time: 'Mon', preview: 'Thanks for the demo! When can we...', email: 'aisha@freshbite.co', phone: '+1 (312) 555-0267', company: 'FreshBite Catering', role: 'Founder', deal: '$1,800 / yr' },
+  { id: 6, name: 'Robert Klein', handle: '@rklein · Chicago, IL', avatar: 'R', color: 'av-red', online: false, unread: 0, time: 'Sun', preview: 'The pricing seems competitive', email: 'r.klein@kleinlaw.com', phone: '+1 (312) 555-0154', company: 'Klein & Associates Law', role: 'Partner', deal: '$4,800 / yr' },
+];
+
+let activeCustomerId = 1;
+
+const allMessages = {
+  1: [
+    { type: 'in', text: 'Hi there! I saw your ad about AI sales automation. Can you tell me more?', time: '14:28', name: 'Sarah' },
+    { type: 'bot', text: '👋 Hello Sarah! Great to hear from you!\n\nI\'m **Alex**, your AI Sales Assistant from BizBot. We help small & medium businesses automate their entire sales process — 24/7, no breaks, no sick days! 🚀\n\nWould you like to know about our features, pricing, or see a quick demo?', time: '14:28' },
+    { type: 'in', text: 'Yes! What can you actually do for my business?', time: '14:29', name: 'Sarah' },
+    { type: 'bot', text: '🎯 Great question! Here\'s what BizBot AI does for you:\n\n✅ **Answers leads instantly** (avg 1.4s response time)\n✅ **Qualifies prospects** using smart questions\n✅ **Books appointments** directly to your calendar\n✅ **Sends follow-up sequences** automatically\n✅ **Integrates with your CRM** (Salesforce, HubSpot)\n✅ **Available 24/7** — never misses a lead\n\nOn average, our clients see a **68% increase in lead conversion** within the first 30 days! 📈', time: '14:29' },
+    { type: 'in', text: 'That sounds interesting! How much does it cost?', time: '14:31', name: 'Sarah' },
+    { type: 'bot', text: '💰 Our plans are designed for every stage:\n\n🔹 **Starter** — $29/mo\n   500 conversations, 1 bot, basic analytics\n\n🔸 **Professional** — $99/mo ⭐ Most Popular\n   Unlimited conversations, 5 bots, full analytics, CRM sync\n\n💎 **Enterprise** — Custom pricing\n   White-label, API access, dedicated support\n\n**Most small businesses start with Professional and see ROI in week 1!** Would you like to start a free 14-day trial? 🎁', time: '14:32' },
+    { type: 'in', text: 'Interested in Professional plan 🔥', time: '14:32', name: 'Sarah' },
+  ],
+  2: [
+    { type: 'in', text: 'Hey, quick question — do you integrate with Shopify?', time: '13:54', name: 'Marcus' },
+    { type: 'bot', text: '🛍️ Yes, absolutely! BizBot has **native Shopify integration**!\n\nYour AI assistant can:\n• Show real-time product inventory\n• Process orders through chat\n• Handle returns & exchanges\n• Send shipping updates\n• Recover abandoned carts 🛒\n\nTake a look at our e-commerce demo? 👇', time: '13:54' },
+    { type: 'in', text: 'Do you integrate with Shopify?', time: '13:55', name: 'Marcus' },
+  ],
+  3: [
+    { type: 'in', text: 'What\'s the difference between Starter and Professional plans?', time: '11:19', name: 'Jennifer' },
+    { type: 'bot', text: '📊 Great comparison question, Jennifer!\n\n**Starter ($29/mo)**\n• 500 conversations/month\n• 1 bot persona\n• Basic analytics\n• Email support\n\n**Professional ($99/mo)** ⭐\n• **Unlimited** conversations\n• 5 bot personas\n• Advanced analytics + reports\n• CRM integrations\n• Priority support\n• A/B testing\n\nFor a boutique like yours, Professional gives you the team features you need. 🌸', time: '11:20' },
+  ],
+  4: [
+    { type: 'in', text: 'Hello, I run an auto repair shop. Can I book a call with your team?', time: '09:30', name: 'Daniel' },
+    { type: 'bot', text: '🔧 Hi Daniel! Absolutely! Auto repair shops are actually one of our best use cases — BizBot handles appointment booking, service inquiries, and follow-ups perfectly!\n\n📅 **Book a 20-min call:**\nhttps://calendly.com/bizbot-demo\n\nOr I can check availability right now — what time works for you? Morning or afternoon? ☀️', time: '09:31' },
+    { type: 'in', text: 'Can I book a call with your team?', time: '09:32', name: 'Daniel' },
+  ],
+};
+
+const knowledgeBase = [
+  { id: 1, icon: '💰', title: 'Pricing Plans', body: 'Starter $29/mo (500 convos), Professional $99/mo (unlimited), Enterprise custom pricing. All plans include 14-day free trial.', tags: ['pricing', 'plans', 'cost'], category: 'pricing' },
+  { id: 2, icon: '📦', title: 'Core Features', body: 'AI-powered responses, lead qualification, appointment booking, CRM integration, analytics dashboard, A/B testing, multilingual support.', tags: ['features', 'product', 'ai'], category: 'products' },
+  { id: 3, icon: '🔗', title: 'Integrations', body: 'Salesforce, HubSpot, Shopify, Stripe, Calendly, Slack, Zapier, WhatsApp, Facebook Messenger, Instagram DM.', tags: ['integrations', 'crm', 'shopify'], category: 'products' },
+  { id: 4, icon: '⏱️', title: 'Response Time', body: 'Average bot response time is 1.4 seconds. Human handoff happens within 30 seconds when requested.', tags: ['speed', 'response', 'performance'], category: 'faq' },
+  { id: 5, icon: '🔒', title: 'Security & Compliance', body: 'End-to-end encryption, GDPR compliant, SOC 2 Type II certified, HIPAA-ready for healthcare clients. Data stored in US/EU data centers.', tags: ['security', 'gdpr', 'compliance'], category: 'faq' },
+  { id: 6, icon: '📞', title: 'Sales Team Contact', body: 'Email: sales@bizbot.ai | Phone: +1 (312) 555-BBOT | Calendly: calendly.com/bizbot-sales | Hours: Mon-Fri 9am-6pm CT', tags: ['contact', 'sales', 'phone'], category: 'contact' },
+  { id: 7, icon: '🚀', title: 'Onboarding Process', body: 'Setup takes 15 minutes. Import your FAQ, customize bot persona, connect your tools. First bot live within 1 hour guaranteed.', tags: ['onboarding', 'setup', 'start'], category: 'faq' },
+  { id: 8, icon: '📊', title: 'ROI Statistics', body: 'Average client results: 68% more conversions, 40% cost reduction vs human sales reps, $18K+ monthly revenue attributed per account.', tags: ['roi', 'results', 'stats'], category: 'faq' },
+];
+
+const templates = [
+  { key: '/welcome', category: 'Greeting', catColor: '#2ecc71', text: 'Hi {{name}}! 👋 Welcome! I\'m Alex, your AI assistant. How can I help you today? I can answer questions, show pricing, or book a demo!' },
+  { key: '/pricing', category: 'Pricing', catColor: '#2b82d9', text: 'Our plans start at just $29/mo. Professional plan at $99/mo is most popular — unlimited convos + full CRM integration. Want to start a FREE trial? 🎁' },
+  { key: '/book_demo', category: 'Booking', catColor: '#9b59b6', text: 'I\'d love to set up a personalized demo for you! 📅 Our team will walk you through everything in 20 minutes. What time works best — morning or afternoon?' },
+  { key: '/follow_up', category: 'Follow-up', catColor: '#f39c12', text: 'Hi {{name}}! Just checking in — have you had a chance to review the info I sent? Happy to answer any questions or set up a quick call! 😊' },
+  { key: '/closing', category: 'Closing', catColor: '#e74c3c', text: 'Amazing chatting with you, {{name}}! 🎉 Ready to get started? Click here to begin your FREE 14-day trial — no credit card needed: bizbot.ai/start' },
+  { key: '/support', category: 'Support', catColor: '#1abc9c', text: 'I\'m here to help! 🛠️ Can you describe the issue? I\'ll either resolve it right away or connect you with our support team within 30 seconds.' },
+];
+
+const convHistories = [
+  { date: 'May 17, 2026', summary: 'Initial inquiry about AI sales tools. Showed interest in automation features.' },
+  { date: 'May 18, 2026', summary: 'Asked detailed questions about Professional plan. Compared with competitor pricing.' },
+  { date: 'May 19, 2026 (Today)', summary: 'Hot lead — requested trial. AI recommended personalized demo invite.' },
+];
+
+// ===== AI RESPONSE ENGINE =====
+const aiResponses = {
+  pricing: [
+    '💰 Great question! Here\'s our pricing breakdown:\n\n🔹 **Starter** — $29/mo · 500 conversations\n🔸 **Professional** — $99/mo · Unlimited ⭐\n💎 **Enterprise** — Custom · White-label + API\n\nAll plans include a **FREE 14-day trial**! No credit card required. Which plan interests you? 😊',
+  ],
+  product: [
+    '📦 Here\'s what makes BizBot special:\n\n• 🤖 **AI trained on YOUR business data**\n• ⚡ **1.4s average response** — faster than any human\n• 🎯 **Lead scoring** — knows who\'s ready to buy\n• 📅 **Automatic booking** with calendar sync\n• 📊 **Real-time analytics** dashboard\n• 🌐 **10+ languages** supported\n• 🔗 **50+ integrations** (Shopify, Salesforce, etc.)\n\nWant to see any of these in action? 🚀',
+  ],
+  booking: [
+    '📅 Let\'s get you scheduled!\n\nI have availability for a personalized demo:\n\n• **Tomorrow** — 10:00 AM CT\n• **Tomorrow** — 2:30 PM CT\n• **Thursday** — 11:00 AM CT\n• **Friday** — 9:00 AM CT\n\nWhich works best for you? The demo is 20 minutes — I\'ll show you exactly how BizBot works for your specific business! 🎯',
+  ],
+  support: [
+    '🛠️ I\'m on it! Our support options:\n\n• 💬 **Live chat** — I\'m here 24/7\n• 📧 **Email** — support@bizbot.ai (2h response)\n• 📞 **Phone** — +1 (312) 555-BBOT\n• 📚 **Help Center** — docs.bizbot.ai\n\nFor urgent issues, I can connect you with a human specialist in **under 30 seconds**. What\'s the issue? 🔧',
+  ],
+  greeting: [
+    '👋 Hello! Great to meet you! I\'m **Alex**, the AI Sales Assistant for BizBot.\n\nI can help you with:\n• 💰 Pricing & plans\n• 📦 Product features\n• 📅 Book a demo\n• ❓ Answer any questions\n\nWhat would you like to know? 😊',
+  ],
+  roi: [
+    '📈 Our clients\' average results after 30 days:\n\n• **+68%** lead conversion rate\n• **-40%** sales labor cost\n• **1.4s** avg response (vs 4hrs for human)\n• **$18,420** monthly revenue attributed to bot\n• **24/7** availability without overtime\n\nFor a small business with 2 sales reps at $45K salary = **$90K/yr saved** with BizBot at just **$1,188/yr**. That\'s **75x ROI**! 🚀',
+  ],
+  default: [
+    '🤖 Thanks for your message! I\'m processing your request with our AI engine...\n\nBased on our knowledge base, I\'d recommend exploring our **Professional Plan** which covers exactly what most small businesses need. Would you like:\n\n📋 A full features comparison?\n💰 Custom pricing for your use case?\n📅 A live demo with our team?\n\nJust say the word! 😊',
+    '✨ Great question! Our AI is designed specifically for small businesses like yours.\n\nHere\'s what stands out: unlike hiring a sales manager ($60-80K/yr), BizBot works 24/7 at $99/mo, never forgets to follow up, and gets smarter every day through machine learning.\n\nWant to see your potential ROI? I can calculate it in 30 seconds! 📊',
+    '💡 I love the enthusiasm! BizBot is currently helping 2,300+ small businesses across Chicago and the US.\n\nKey fact: **Our top-performing clients report closing deals they would have missed entirely** — leads that came in at 2 AM, on weekends, during holidays.\n\nWould you like to hear a success story from a business similar to yours? 🎯',
+  ],
+};
+
+function getBotResponse(text) {
+  const t = text.toLowerCase();
+  if (t.includes('price') || t.includes('cost') || t.includes('plan') || t.includes('how much') || t.includes('pricing') || t.includes('💰')) return aiResponses.pricing[0];
+  if (t.includes('feature') || t.includes('product') || t.includes('what can') || t.includes('how does') || t.includes('🛍️')) return aiResponses.product[0];
+  if (t.includes('book') || t.includes('demo') || t.includes('appointment') || t.includes('schedule') || t.includes('call') || t.includes('📅')) return aiResponses.booking[0];
+  if (t.includes('support') || t.includes('help') || t.includes('problem') || t.includes('issue') || t.includes('🛠️')) return aiResponses.support[0];
+  if (t.includes('hi') || t.includes('hello') || t.includes('hey') || t.includes('greet')) return aiResponses.greeting[0];
+  if (t.includes('roi') || t.includes('return') || t.includes('save') || t.includes('cost') || t.includes('money') || t.includes('profit')) return aiResponses.roi[0];
+  if (t.includes('faq') || t.includes('❓')) return '❓ **Frequently Asked Questions:**\n\n**Q: How long does setup take?**\nA: Under 15 minutes — seriously! 🚀\n\n**Q: Do I need technical skills?**\nA: Zero! It\'s drag-and-drop simple.\n\n**Q: Can I customize the bot\'s personality?**\nA: Completely — name, tone, language, everything.\n\n**Q: What if a customer asks something the bot doesn\'t know?**\nA: It instantly escalates to a human. No awkward moments!\n\nMore questions? Ask away! 😊';
+  if (t.includes('human') || t.includes('person') || t.includes('agent') || t.includes('📞')) return '👥 Of course! Connecting you with a human specialist now...\n\n⏳ Estimated wait: **< 30 seconds**\n\nIn the meantime, I\'m sending your conversation history to the agent so they have full context. You won\'t need to repeat yourself! 🤝\n\n*[Human agent Sarah M. is joining the chat...]*';
+  const defaults = aiResponses.default;
+  return defaults[Math.floor(Math.random() * defaults.length)];
+}
+
+// ===== RENDER FUNCTIONS =====
+function renderChats() {
+  const list = document.getElementById('chatsList');
+  list.innerHTML = customers.map(c => `
+    <div class="chat-item ${c.id === activeCustomerId ? 'active' : ''}" onclick="selectChat(${c.id})">
+      <div class="chat-avatar ${c.color} ${c.online ? 'avatar-online' : ''}">${c.avatar}</div>
+      <div class="chat-info">
+        <div class="chat-name">${c.name}</div>
+        <div class="chat-preview">${c.preview}</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">${c.time}</div>
+        ${c.unread > 0 ? `<div class="chat-badge">${c.unread}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMessages(customerId) {
+  const area = document.getElementById('messagesArea');
+  const msgs = allMessages[customerId] || [];
+  area.innerHTML = `<div class="date-divider"><span>Today, May 19, 2026</span></div>`;
+  msgs.forEach(m => area.innerHTML += buildMessageHTML(m));
+  area.scrollTop = area.scrollHeight;
+}
+
+function buildMessageHTML(m) {
+  if (m.type === 'in') {
+    return `<div class="message-wrap in">
+      <div class="msg-sender">👤 ${m.name || 'Customer'}</div>
+      <div class="message-bubble">${formatText(m.text)}</div>
+      <div class="msg-meta">${m.time}</div>
+    </div>`;
+  } else {
+    return `<div class="message-wrap out">
+      <div class="bot-badge">🤖 BizBot AI</div>
+      <div class="message-bubble">${formatText(m.text)}</div>
+      <div class="msg-meta">${m.time} <span class="msg-check">✓✓</span></div>
+    </div>`;
+  }
+}
+
+function formatText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+function renderKB() {
+  const container = document.getElementById('kbEntries');
+  container.innerHTML = knowledgeBase.map(e => `
+    <div class="kb-entry" data-category="${e.category}">
+      <div class="kb-entry-header">
+        <span class="kb-entry-icon">${e.icon}</span>
+        <span class="kb-entry-title">${e.title}</span>
+      </div>
+      <div class="kb-entry-body">${e.body}</div>
+      <div class="kb-entry-tags">${e.tags.map(t => `<span class="kb-tag">${t}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+
+function renderTemplates() {
+  const container = document.getElementById('templatesList');
+  container.innerHTML = templates.map(t => `
+    <div class="template-item">
+      <div class="template-header">
+        <span class="template-key">${t.key}</span>
+        <span class="template-category" style="background:${t.catColor}22;color:${t.catColor}">${t.category}</span>
+      </div>
+      <div class="template-text">${t.text}</div>
+    </div>
+  `).join('');
+}
+
+function renderConvHistory() {
+  const container = document.getElementById('convHistory');
+  container.innerHTML = convHistories.map(h => `
+    <div class="conv-history-item">
+      <div class="ch-date">📅 ${h.date}</div>
+      <div class="ch-summary">${h.summary}</div>
+    </div>
+  `).join('');
+}
+
+function renderWeekChart() {
+  const data = [42, 58, 35, 71, 89, 64, 97];
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const max = Math.max(...data);
+  const chart = document.getElementById('weekChart');
+  chart.innerHTML = data.map((v, i) => `
+    <div class="bar-wrap">
+      <div class="bar" style="height:${(v/max)*70}px" title="${v} conversations"></div>
+      <span class="bar-label">${days[i]}</span>
+    </div>
+  `).join('');
+}
+
+// ===== INTERACTIONS =====
+function selectChat(id) {
+  activeCustomerId = id;
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  // Update header
+  document.getElementById('headerAvatar').className = `chat-header-avatar ${c.color}`;
+  document.getElementById('headerAvatar').textContent = c.avatar;
+  document.getElementById('headerName').textContent = c.name;
+  document.getElementById('headerStatus').textContent = c.online ? '🟢 Active now · AI is ready' : '⚪ Last seen recently · AI is ready';
+  // Update profile tab
+  document.getElementById('customerBigAvatar').className = `customer-big-avatar ${c.color}`;
+  document.getElementById('customerBigAvatar').textContent = c.avatar;
+  document.getElementById('customerFullName').textContent = c.name;
+  document.getElementById('customerHandle').textContent = c.handle;
+  document.getElementById('cEmail').textContent = c.email;
+  document.getElementById('cPhone').textContent = c.phone;
+  document.getElementById('cCompany').textContent = c.company;
+  document.getElementById('cRole').textContent = c.role;
+  document.getElementById('cDeal').textContent = c.deal;
+  // Remove unread
+  customers.find(x => x.id === id).unread = 0;
+  renderChats();
+  renderMessages(id);
+}
+
+function sendUserMessage() {
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const c = customers.find(x => x.id === activeCustomerId);
+  if (!allMessages[activeCustomerId]) allMessages[activeCustomerId] = [];
+  allMessages[activeCustomerId].push({ type: 'in', text, time, name: c ? c.name : 'Customer' });
+  input.value = ''; input.style.height = 'auto';
+  renderMessages(activeCustomerId);
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    const response = getBotResponse(text);
+    allMessages[activeCustomerId].push({ type: 'bot', text: response, time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) });
+    renderMessages(activeCustomerId);
+    if (c) { c.preview = text.substring(0, 40) + (text.length > 40 ? '...' : ''); c.time = 'now'; renderChats(); }
+  }, 1200 + Math.random() * 800);
+}
+
+function sendQuickReply(text) {
+  document.getElementById('messageInput').value = text;
+  sendUserMessage();
+}
+
+function handleInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendUserMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function showTyping() {
+  const t = document.getElementById('typingIndicator');
+  t.classList.add('show');
+  document.getElementById('messagesArea').scrollTop = 99999;
+}
+
+function hideTyping() {
+  document.getElementById('typingIndicator').classList.remove('show');
+}
+
+// ===== DEMO SCENARIOS =====
+const scenarios = {
+  lead: [
+    { type: 'in', text: 'Hey, I found you on Google. What exactly does your AI do?', delay: 500 },
+    { type: 'bot', text: '👋 Hi there! Welcome to BizBot AI!\n\nWe build AI-powered sales assistants that work 24/7 to capture leads, answer questions, qualify prospects, and close deals — **completely on autopilot**.\n\nMost of our clients save 40+ hours per week and see a 68% jump in conversions.\n\nMind if I ask — what kind of business do you run? 🏢', delay: 2000 },
+    { type: 'in', text: 'I own a small fitness studio in Chicago', delay: 4000 },
+    { type: 'bot', text: '🏋️ Perfect! Fitness studios are AMAZING for BizBot. Here\'s what we\'d set up for you:\n\n📲 **Auto-respond** to class inquiries instantly\n📅 **Book trials** directly from Instagram/website\n💰 **Sell memberships** through chat\n🔁 **Re-engage** churned members automatically\n⭐ **Collect reviews** after every class\n\nJennifer from FitLife Chicago went from 12 to 47 new members/month using BizBot. **Want her case study?** 📊', delay: 6000 },
+    { type: 'in', text: 'Yes please! And how do I get started?', delay: 8500 },
+    { type: 'bot', text: '🎉 Awesome! I\'m capturing your info as a **HOT LEAD** in our CRM right now!\n\nHere\'s your path:\n1. ✅ **Free 14-day trial** starts today\n2. ✅ **Setup call** tomorrow (15 mins)\n3. ✅ **Your bot goes LIVE** same day\n4. ✅ **First leads** rolling in within hours\n\nClick here to start: **bizbot.ai/fitness-trial**\n\nOr I can have our Chicago rep **James** call you in the next 2 hours. Which do you prefer? 🚀', delay: 11000 },
+  ],
+  pricing: [
+    { type: 'in', text: 'How much does it cost? I\'m on a tight budget', delay: 500 },
+    { type: 'bot', text: '💰 I totally understand budget concerns! Great news — BizBot is priced specifically for small businesses:\n\n🔹 **Starter** — just **$29/mo**\n   Perfect starting point\n\n🔸 **Professional** — **$99/mo** ⭐\n   The sweet spot for most businesses\n\nHere\'s the math: **1 extra customer/month pays for the whole year.**\n\nWhat\'s your average transaction value? I\'ll show you your exact ROI 📊', delay: 1500 },
+    { type: 'in', text: 'Around $150 per customer', delay: 3500 },
+    { type: 'bot', text: '📊 ROI Calculation for your business:\n\n• **BizBot cost:** $99/mo = $1,188/yr\n• **Average deal:** $150\n• **Break even:** just **8 extra deals/year** (< 1/month)\n\nOur avg client gets **34 bot-attributed deals/month**.\n\n**Your potential:** 34 × $150 = **$5,100/mo** in bot revenue\n**ROI: 5,050%** 🚀🚀🚀\n\nStill think it\'s expensive? 😄 Ready for your free trial?', delay: 5500 },
+  ],
+  booking: [
+    { type: 'in', text: 'I\'d like to see a demo of the product', delay: 500 },
+    { type: 'bot', text: '📅 Excellent! Let me pull up available slots...\n\n🗓️ **This Week — Chicago Time (CT):**\n\n• **Wednesday** May 20 — 10:00 AM ✅\n• **Wednesday** May 20 — 3:00 PM ✅\n• **Thursday** May 21 — 11:00 AM ✅\n• **Friday** May 22 — 9:00 AM ✅\n\nDemo is **20 mins via Zoom** — I\'ll show you the exact setup for YOUR type of business.\n\nWhich slot works? 🎯', delay: 1500 },
+    { type: 'in', text: 'Wednesday at 10 AM works', delay: 3000 },
+    { type: 'bot', text: '✅ **BOOKED!** Here\'s your confirmation:\n\n📅 Wednesday, May 20 at 10:00 AM CT\n🎥 Zoom link: bizbot.ai/demo/join-xyz123\n👤 Host: James Rivera (Chicago Sales Lead)\n\n📧 Confirmation sent to your email!\n📱 SMS reminder 1 hour before\n\n**While you wait, I\'ll prepare a custom demo** based on your industry. One quick question: what\'s your biggest sales challenge right now? 🤔', delay: 5000 },
+  ],
+  support: [
+    { type: 'in', text: 'My bot stopped responding to customers, I need help urgently', delay: 500 },
+    { type: 'bot', text: '🚨 I\'m on it! Let me run a quick diagnostic...\n\n⚡ **System Check:**\n✅ Bot engine — Online\n✅ Your account — Active\n⚠️ **Found it!** — Knowledge base sync interrupted\n\n🔧 **Auto-fix running now...**\n\n⏱️ Estimated resolution: **45 seconds**\n\nI\'m also paging our on-call engineer as backup. You\'ll be back online in under a minute! 💪', delay: 1500 },
+    { type: 'in', text: 'Great, is it fixed?', delay: 4000 },
+    { type: 'bot', text: '✅ **ALL SYSTEMS GO!**\n\n🟢 Bot is responding normally\n🟢 Knowledge base fully synced\n🟢 All 3 active conversations resumed\n\n**What caused it:** Your Shopify inventory updated 847 products at once — we\'ve now optimized the sync to handle large updates seamlessly.\n\n📊 You lost approximately **4 minutes** of coverage. I\'ve flagged the 2 conversations that may need follow-up.\n\nIs there anything else I can help you with? 😊', delay: 6000 },
+  ],
+  upsell: [
+    { type: 'in', text: 'I\'ve been on Starter for 3 months and it\'s been good', delay: 500 },
+    { type: 'bot', text: '🎉 So glad to hear that! I was actually about to reach out to you!\n\nI pulled up your account stats from the last 90 days:\n\n📊 **Your Starter Plan Usage:**\n• Conversations: **487/500** (97% full!)\n• Leads captured: **134**\n• Deals closed: **28** = **$4,200 revenue**\n• You\'re hitting your limit almost every month!\n\n⚠️ **Last Tuesday you hit the cap** and missed 18 inquiries.\n\nWant to see how much that\'s costing you? 💰', delay: 1500 },
+    { type: 'in', text: 'Oh wow, I didn\'t realize. Tell me more', delay: 3500 },
+    { type: 'bot', text: '💡 Here\'s the honest breakdown:\n\n**Missed conversations last 30 days: ~50**\nAt your 21% conversion rate: **~10 missed sales**\nAt your avg deal of $150: **$1,500 lost monthly**\n\n**Upgrading to Professional costs $70 more/month.**\n\n**Net gain: $1,500 - $70 = $1,430/mo** 📈\n\n🎁 Special offer: **Upgrade today and get 2 months free!**\nThat\'s Professional for the price of Starter for the rest of Q2.\n\nWant me to upgrade your account right now? Takes 30 seconds! 🚀', delay: 6000 },
+  ],
+};
+
+let scenarioTimeout = [];
+function runScenario(name) {
+  scenarioTimeout.forEach(clearTimeout);
+  scenarioTimeout = [];
+  const msgs = scenarios[name];
+  if (!msgs) return;
+  const area = document.getElementById('messagesArea');
+  const c = customers.find(x => x.id === activeCustomerId);
+  const time = () => new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (!allMessages[activeCustomerId]) allMessages[activeCustomerId] = [];
+
+  showToast('▶️', `Running demo: ${name} scenario`);
+
+  msgs.forEach((m, i) => {
+    const t = setTimeout(() => {
+      if (m.type === 'in') {
+        hideTyping();
+        allMessages[activeCustomerId].push({ type: 'in', text: m.text, time: time(), name: c ? c.name : 'Customer' });
+        renderMessages(activeCustomerId);
+        // Show typing for next bot msg
+        const nextMsg = msgs[i + 1];
+        if (nextMsg && nextMsg.type === 'bot') {
+          setTimeout(() => showTyping(), 300);
+        }
+      } else {
+        hideTyping();
+        allMessages[activeCustomerId].push({ type: 'bot', text: m.text, time: time() });
+        renderMessages(activeCustomerId);
+      }
+    }, m.delay);
+    scenarioTimeout.push(t);
+  });
+}
+
+// ===== TABS =====
+function showTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ===== THEME =====
+let darkMode = true;
+function toggleTheme() {
+  darkMode = !darkMode;
+  document.body.classList.toggle('light-theme', !darkMode);
+  document.getElementById('themeBtn').textContent = darkMode ? '🌙' : '☀️';
+  showToast(darkMode ? '🌙' : '☀️', darkMode ? 'Dark mode enabled' : 'Light mode enabled');
+}
+
+// ===== MODALS =====
+function openNewChatModal() { document.getElementById('newChatModal').classList.add('show'); }
+function openAddKBModal() { document.getElementById('addKBModal').classList.add('show'); }
+function openAddTemplateModal() { document.getElementById('addTemplateModal').classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function createNewChat() {
+  const name = document.getElementById('ncName').value || 'New Customer';
+  const colors = ['av-blue','av-green','av-purple','av-orange','av-teal','av-red'];
+  const newC = {
+    id: customers.length + 1,
+    name, handle: `@${name.toLowerCase().replace(/\s/g, '.')} · Chicago, IL`,
+    avatar: name[0].toUpperCase(),
+    color: colors[Math.floor(Math.random() * colors.length)],
+    online: true, unread: 0, time: 'now',
+    preview: 'New conversation started',
+    email: document.getElementById('ncEmail').value || 'new@customer.com',
+    phone: document.getElementById('ncPhone').value || 'N/A',
+    company: 'New Business', role: 'Owner', deal: 'TBD'
+  };
+  customers.unshift(newC);
+  allMessages[newC.id] = [];
+  renderChats();
+  selectChat(newC.id);
+  closeModal('newChatModal');
+  showToast('✅', `Conversation started with ${name}`);
+  // Auto-greet
+  setTimeout(() => showTyping(), 800);
+  setTimeout(() => {
+    hideTyping();
+    allMessages[newC.id].push({ type: 'bot', text: `👋 Hi ${name}! I'm **Alex**, your AI Sales Assistant.\n\nWelcome! I'm here to help 24/7. What can I assist you with today? 😊`, time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false}) });
+    renderMessages(newC.id);
+  }, 2000);
+}
+
+function addKBEntry() {
+  const title = document.getElementById('kbTitle').value;
+  if (!title) return;
+  knowledgeBase.push({
+    id: knowledgeBase.length + 1,
+    icon: '📝',
+    title,
+    body: document.getElementById('kbBody').value,
+    tags: document.getElementById('kbTags').value.split(',').map(t => t.trim()).filter(Boolean),
+    category: document.getElementById('kbCategory').value,
+  });
+  renderKB();
+  closeModal('addKBModal');
+  showToast('🧠', 'Knowledge base updated!');
+}
+
+function addTemplate() {
+  const key = document.getElementById('tplKey').value;
+  if (!key) return;
+  templates.push({
+    key,
+    category: document.getElementById('tplCat').value,
+    catColor: '#2b82d9',
+    text: document.getElementById('tplText').value,
+  });
+  renderTemplates();
+  closeModal('addTemplateModal');
+  showToast('⚡', 'Template saved!');
+}
+
+// ===== FILTERS =====
+function filterChats(val) {
+  document.querySelectorAll('.chat-item').forEach((el, i) => {
+    const c = customers[i];
+    el.style.display = !val || c.name.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function filterKB(val) {
+  document.querySelectorAll('.kb-entry').forEach(el => {
+    el.style.display = !val || el.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function filterKBCat(el, cat) {
+  document.querySelectorAll('.kb-cat').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.kb-entry').forEach(e => {
+    e.style.display = (cat === 'all' || e.dataset.category === cat) ? '' : 'none';
+  });
+}
+
+// ===== NAV =====
+function setNavActive(btn, section) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (section === 'analytics') showTab('analytics');
+  if (section === 'settings') showTab('settings');
+}
+
+// ===== TOAST =====
+function showToast(icon, text) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-text">${text}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = '0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+// ===== INIT =====
+window.onload = () => {
+  renderChats();
+  renderMessages(1);
+  renderKB();
+  renderTemplates();
+  renderConvHistory();
+  renderWeekChart();
+  // Welcome toast
+  setTimeout(() => showToast('🚀', 'BizBot AI Demo loaded — ready to impress!'), 1000);
+  setTimeout(() => showToast('🔥', '3 hot leads waiting in queue'), 2500);
+  setTimeout(() => showToast('💰', 'New deal closed: $1,200 — Marcus W.'), 4500);
+};
+</script>
+</body>
+</html>
